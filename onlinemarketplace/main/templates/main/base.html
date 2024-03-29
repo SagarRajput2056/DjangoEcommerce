@@ -13,8 +13,20 @@
         <div class="logo">
             <a href="/" class="text-2xl text-white">O.M</a>
         </div>
+
+        <div class="search">
+            <form action="/search/" method="get">
+                <input type="search" name="query" placeholder="Search.....">
+                <button>Search</button>
+            </form>
+        </div>
+
         <div class="menu flex space-x-4">
             {% menu %}
+
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'account_detail' %}" class="text-white">My Account</a>
+            {% endif %}
         </div>
     </nav>
     <div class="max-w-4xl mx-auto py-4 px-6">

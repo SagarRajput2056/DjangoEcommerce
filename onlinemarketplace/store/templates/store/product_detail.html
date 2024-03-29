@@ -11,7 +11,7 @@
     <p class="text-xs text-gray-500">
         Rs.{{ product.price }}
         -
-        {% firstof product.user.get_full_name product.user.username %}
+        <a href="{% url 'vendor_detail' product.user.id %}">{% firstof product.user.get_full_name product.user.username %}</a>
     </p>
     {% if product.description %}
         <p class="mt-4">{{ product.description }}</p>
