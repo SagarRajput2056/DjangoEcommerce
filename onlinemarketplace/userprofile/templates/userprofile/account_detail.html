@@ -3,9 +3,17 @@
 {% block title %}My Account{% endblock %}
 
 {% block content %}
-    <h1 class="text-2xl">My Account</h1>
-    <form action="{% url 'logout' %}" method="post" class="mt-6">
-        {% csrf_token %}
-        <button type="submit" class="py-2 px-3 bg-red-800 text-white">Logout</button>
-    </form>
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-4">My Account</h1>
+        
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">User Profile Information</h2>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+        </div>
+        <form action="{% url 'logout' %}" method="post" class="mt-6">
+            {% csrf_token %}
+            <button type="submit" class="py-2 px-3 bg-red-800 text-white">Logout</button>
+        </form>
+    </div>
 {% endblock %}

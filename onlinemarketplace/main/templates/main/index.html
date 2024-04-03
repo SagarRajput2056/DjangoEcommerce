@@ -3,22 +3,33 @@
 {% block content %}
 
     <div class="flex flex-wrap">
-        {% for product in products %}
+        {% for product in page_obj %}
             <div class="product w-1/3 p-2">
-                <div class="p-4 bg-gray-100 ">
-                    <a href="{% url 'product_detail' product.category.slug product.slug %}">
-                        {% if product.image %}
-                            <div class="image mb-2">
-                                <img src="{{ product.image.url }}" alt="Image of {{ product.title }}">
-                            </div>
-                        {% endif %}
-                        <h2 class="text-xl">{{ product.title }}</h2>
-                        <p class="text-xs text-gray-600">Rs.{{ product.price }}</p>
+                <div class="p-4 bg-gray-100 shadow-md rounded-lg">
+                    <a href="{% url 'product_detail' product.category.slug product.slug %}" class="block">
+                        <div class="image mb-2 bg-gray-200" style="height: 200px;">
+                            <img src="{{ product.get_thumbnail }}" alt="Image of {{ product.title }}" class="rounded-lg w-full h-full object-cover">
+                        </div>
+                        <h2 class="text-xl font-semibold">{{ product.title }}</h2>
+                        <p class="text-sm text-gray-600">Rs.{{ product.price }}</p>
                     </a>
                 </div>
             </div>
         {% endfor %}
     </div>
-    
 
+    <!-- Pagination controls -->
+    <div class="flex justify-center my-8">
+        <div class="flex rounded-md bg-gray-200">
+            {% if page_obj.has_previous %}
+                <a href="?page=1" class="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-l-md">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}" class="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold">Previous</a>
+            {% endif %}
+            <span class="py-2 px-4 bg-gray-400 text-gray-800 font-bold">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}" class="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold rounded-r-md">Last &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

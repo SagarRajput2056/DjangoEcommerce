@@ -1,11 +1,14 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.utils.text import slugify
+from django.contrib import messages
+from django.core.paginator import Paginator
 
-from store.models import Product
+from userprofile.forms import CustomUserCreationForm
+from store.models import Order, Product, OrderItem
 
 from .models import UserProfile
 from store.forms import ProductForm
@@ -20,7 +23,22 @@ def vendor_detail(request, pk):
 
 @login_required
 def my_store(request):
-    return render(request,'userprofile/my_store.html')
+    order_items = OrderItem.objects.filter(product__user=request.user).order_by('-order__created_at')
+    paginator = Paginator(order_items, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'userprofile/my_store.html', {
+        'page_obj': page_obj,  
+    })
+
+@login_required
+def store_order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    
+    return render(request,'userprofile/store_order_detail.html',{
+        'order': order,
+    })
 
 @login_required
 def add_product(request):
@@ -32,11 +50,12 @@ def add_product(request):
             product.user = request.user
             product.slug = slugify(title)
             product.save()
+            messages.success(request, 'The product was added!')
             return redirect('my_store')
     else:
             form = ProductForm()
 
-    return render(request, 'userprofile/add_product.html',{
+    return render(request, 'userprofile/product_form.html',{
         'title': 'Add Product',
         'form': form,
     })
@@ -49,15 +68,24 @@ def edit_product(request, pk):
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
+            messages.success(request, 'The changes were saved!')
             return redirect('my_store')
     
     else:
         form = ProductForm(instance=product)
 
-    return render(request, 'userprofile/add_product.html',{
+    return render(request, 'userprofile/product_form.html',{
         'title': 'Edit Product',
+        'product': product,
         'form': form,
     })
+
+@login_required
+def delete_product(request, pk):
+    product = Product.objects.filter(user=request.user).get(pk=pk)
+    product.delete()
+    messages.success(request, 'The product was deleted!')
+    return redirect('my_store')
 
 @login_required
 def account_detail(request):
@@ -65,16 +93,17 @@ def account_detail(request):
 
 def register(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            userprofile = UserProfile.objects.create(user=user)
-
+            print("User created:", user)
+            print("UserProfile created:", user.userprofile)
             return redirect('index')
-        
+        else:
+            print(form.errors)
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     return render(request, 'userprofile/register.html', {
         'form': form
