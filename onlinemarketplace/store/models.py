@@ -67,7 +67,6 @@ class Order(models.Model):
     phone = models.CharField(max_length=10)
     paid_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     is_paid = models.BooleanField(default=False)
-    merchant_id = models.CharField(max_length=255)
     created_by = models.ForeignKey(User, related_name='orders', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

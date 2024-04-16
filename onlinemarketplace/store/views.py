@@ -65,12 +65,11 @@ def checkout(request):
             return redirect('account_detail')
     else:
         form = OrderForm()
-
+ 
     return render(request,'store/checkout.html',{
         'cart': cart,
         'form': form,
     })
-
 
 def search(request):
     query = request.GET.get('query', '')
