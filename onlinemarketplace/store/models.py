@@ -59,6 +59,11 @@ class Product(models.Model):
         return thumbnail
 
 class Order(models.Model):
+    METHOD = (
+    ("Cash On Delivery", "Cash On Delivery"),
+    ("Esewa", "Esewa"),
+)
+    
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
@@ -66,9 +71,11 @@ class Order(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=10)
     paid_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    payment_method = models.CharField(max_length=20, choices=METHOD, default="Cash On Delivery")
     is_paid = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, related_name='orders', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
 
     
 class OrderItem(models.Model):

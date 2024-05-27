@@ -1,0 +1,62 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl">Cart</h1>
+
+<h2 class="mt-2">Total Cost: Rs.{{ cart.get_total_cost }}</h2>
+
+<form action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST" onsubmit="generateSignature()">
+    {% csrf_token %}
+    <input type="hidden" id="amount" name="amount" value="{{ cart.get_total_cost }}" required>
+    <input type="hidden" id="tax_amount" name="tax_amount" value="0" required>
+    <input type="hidden" id="total_amount" name="total_amount" value="{{ cart.get_total_cost }}" required>
+    <input type="hidden" id="transaction_uuid" name="transaction_uuid" value="1234">
+    <input type="hidden" id="product_code" name="product_code" value="EPAYTEST" required>
+    <input type="hidden" id="product_service_charge" name="product_service_charge" value="0" required>
+    <input type="hidden" id="product_delivery_charge" name="product_delivery_charge" value="0" required>
+    <input type="hidden" id="success_url" name="success_url" value="http://127.0.0.1:8000/?payment_success=true" required>
+    <input type="hidden" id="failure_url" name="failure_url" value="http://127.0.0.1:8000/cart" required>
+    <input type="hidden" id="signed_field_names" name="signed_field_names"
+        value="total_amount,transaction_uuid,product_code" required>
+    <input type="hidden" id="signature" name="signature">
+    <button type="submit" href="{% url 'checkout' %}" class="inline-block mt-4 px-4 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors">Pay with Esewa</button>
+</form>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1
+/crypto-js.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1
+/hmac-sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1
+/enc-base64.min.js"></script>
+
+<script>
+    // Function to auto-generate signature
+    function generateSignature() {
+        var currentTime = new Date();
+        var formattedTime = currentTime.toISOString().slice(2, 10).replace(/-/g, '') + '-' + currentTime.getHours() +
+            currentTime.getMinutes() + currentTime.getSeconds();
+        document.getElementById("transaction_uuid").value = formattedTime;
+        var total_amount = document.getElementById("total_amount").value;
+        var transaction_uuid = document.getElementById("transaction_uuid").value;
+        var product_code = document.getElementById("product_code").value;
+        var secret = "8gBm/:&EnhH.1/q"
+        // document.getElementById("secret").value;
+
+        var hash = CryptoJS.HmacSHA256(
+            `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`,
+            `${secret}`);
+        var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
+        document.getElementById("signature").value = hashInBase64;
+    }
+
+    // Event listeners to call generateSignature() when inputs are changed
+    document.getElementById("total_amount").addEventListener("input", generateSignature);
+    document.getElementById("transaction_uuid").addEventListener("input", generateSignature);
+    document.getElementById("product_code").addEventListener("input", generateSignature);
+</script>
+</form>
+
+{% endblock %}

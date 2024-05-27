@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -31,6 +32,15 @@ def my_store(request):
     return render(request, 'userprofile/my_store.html', {
         'page_obj': page_obj,  
     })
+
+    
+def toggle_order_status(request, order_id):
+    order = Order.objects.get(id=order_id)
+    if order.is_paid:
+        return redirect('my_store')   
+    order.is_paid = not order.is_paid 
+    order.save()
+    return redirect('my_store')  
 
 @login_required
 def store_order_detail(request, pk):

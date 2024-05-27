@@ -8,8 +8,10 @@ def index(request):
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
-    return render(request, 'main/index.html', {'page_obj': page_obj})
+    payment_success = request.GET.get('payment_success', False)
+    order_success = request.GET.get('order_success') == 'true'
+    
+    return render(request, 'main/index.html', {'page_obj': page_obj, 'payment_success': payment_success, 'order_success': order_success})
 
 def about(request):
     return render(request, 'main/about.html')

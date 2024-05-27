@@ -16,33 +16,54 @@
     <h2 class="text-xl mt-6 mb-6">My Orders</h2>
 
     <div class="flex flex-wrap border-b border-gray-300 pb-2">
-        <div class="w-1/4 px-2">
+        <div class="w-1/6 px-2">
             <strong>Order ID</strong>
         </div>
-        <div class="w-1/4 px-2">
+        <div class="w-1/6 px-2">
             <strong>Title</strong>
         </div>
-        <div class="w-1/4 px-2">
+        <div class="w-1/6 px-2">
             <strong>Quantity</strong>
         </div>
-        <div class="w-1/4 px-2">
+        <div class="w-1/6 px-2">
             <strong>Price</strong>
+        </div>
+        <div class="w-1/6 px-2">
+            <strong>Status</strong>
+        </div>
+        <div class="w-1/6 px-2">
+            <strong>Payment Method</strong>
         </div>
     </div>
 
     {% for order_item in page_obj %}
         <div class="flex flex-wrap border-b border-gray-300 py-2">
-            <div class="w-1/4 px-2">
+            <div class="w-1/6 px-2">
                 <a href="{% url 'store_order_detail' order_item.order.id %}">{{ order_item.order.id }}</a>
             </div>
-            <div class="w-1/4 px-2">
+            <div class="w-1/6 px-2">
                 {{ order_item.product.title }}
             </div>
-            <div class="w-1/4 px-2">
+            <div class="w-1/6 px-2">
                 {{ order_item.quantity }}
             </div>
-            <div class="w-1/4 px-2">
+            <div class="w-1/6 px-2">
                 Rs.{{ order_item.price }}
+            </div>
+            <div class="w-1/6 px-2">
+                <form action="{% url 'toggle_order_status' order_item.order.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="toggle-status-btn">
+                        {% if not order_item.order.is_paid %}
+                            Pending
+                        {% else %}
+                            Paid
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+            <div class="w-1/6 px-2">
+                {{ order_item.order.payment_method }}
             </div>
         </div>
     {% endfor %}
