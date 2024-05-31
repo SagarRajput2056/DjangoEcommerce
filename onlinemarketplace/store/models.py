@@ -1,3 +1,4 @@
+import uuid
 from django.core.files import File
 from django.db import models
 from django.contrib.auth.models import User
@@ -73,6 +74,7 @@ class Order(models.Model):
     paid_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     payment_method = models.CharField(max_length=20, choices=METHOD, default="Cash On Delivery")
     is_paid = models.BooleanField(default=False)
+    transaction_uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_by = models.ForeignKey(User, related_name='orders', on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,3 +1,6 @@
+import base64
+import json
+import uuid
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -63,33 +66,50 @@ def checkout(request):
             order.created_by = request.user
             order.paid_amount = total_price
             order.payment_method = payment_method
-            if payment_method == "Esewa":
-                order.is_paid = True
-            else:
-                order.is_paid = False
+            order.is_paid = False
             order.save()
             
             for item in cart:
                 product = item['product']
                 quantity = item['quantity']
                 price = product.price * quantity
-                item = OrderItem.objects.create(order=order, product=product, price=price, quantity=quantity)
+                OrderItem.objects.create(order=order, product=product, price=price, quantity=quantity)
             
             if payment_method == 'Esewa':
-                return render(request, "store/esewacheckout.html")
+                return render(request, "store/esewacheckout.html", {'order': order})
             else:
                 cart.clear()
                 return redirect(f"/?order_success=true")
-            
-            
     else:
         form = OrderForm(initial=initial_data)
  
-    return render(request,'store/checkout.html',{
+    return render(request, 'store/checkout.html', {
         'cart': cart,
         'form': form,
     })
 
+
+def payment_confirmation(request):
+    payment_success = request.GET.get('payment_success')
+    if payment_success:
+        encoded_data = request.GET.get('data')
+        if encoded_data:
+            decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+            payment_data = json.loads(decoded_data)
+
+            if payment_data['status'] == 'COMPLETE':
+                order = Order.objects.get(transaction_uuid=payment_data['transaction_uuid'])
+                order.is_paid = True
+                order.save()
+
+                cart = Cart(request)
+                cart.clear()
+
+                messages.success(request, 'Payment successful! Your order has been marked as paid.')
+            else:
+                messages.error(request, 'Payment failed. Please try again.')
+
+    return redirect('index')
 
 def search(request):
     query = request.GET.get('query', '')

@@ -72,6 +72,7 @@ def add_product(request):
 
 @login_required
 def edit_product(request, pk):
+    
     product = Product.objects.filter(user=request.user).get(pk=pk)
     
     if request.method == 'POST':
