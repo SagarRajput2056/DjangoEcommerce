@@ -10,16 +10,27 @@
         {% csrf_token %}
         <div class="mb-4">
             <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username</label>
-            <input type="text" name="username" id="username" class="border border-gray-300 rounded-md w-full px-3 py-2" />
+            <input type="text" name="username" id="username" class="border border-gray-300 rounded-md w-full px-3 py-2" {% if form.username.value %}value="{{ form.username.value }}"{% endif %} />
+            {% if form.username.errors %}
+                <p class="text-red-500 text-xs italic">{{ form.username.errors.0 }}</p>
+            {% endif %}
         </div>
         
         <div class="mb-4">
             <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
             <input type="password" name="password" id="password" class="border border-gray-300 rounded-md w-full px-3 py-2" />
+            {% if form.password.errors %}
+                <p class="text-red-500 text-xs italic">{{ form.password.errors.0 }}</p>
+            {% endif %}
         </div>
     
         <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Login</button>
     </form>
+    {% if form.non_field_errors %}
+        <div class="mt-4">
+            <p class="text-red-500 text-xs italic">{{ form.non_field_errors.0 }}</p>
+        </div>
+    {% endif %}
     <p class="mt-4 text-sm">New user? <a href="{% url 'register' %}" class="text-blue-500 font-bold">Register here</a></p>
 </div>
 {% endblock %}
