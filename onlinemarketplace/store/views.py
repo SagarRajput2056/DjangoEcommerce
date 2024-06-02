@@ -89,27 +89,26 @@ def checkout(request):
     })
 
 
-def payment_confirmation(request):
-    payment_success = request.GET.get('payment_success')
-    if payment_success:
-        encoded_data = request.GET.get('data')
-        if encoded_data:
-            decoded_data = base64.b64decode(encoded_data).decode('utf-8')
-            payment_data = json.loads(decoded_data)
+def payment_confirmation(request, product_id:str):
+    product_id = product_id.replace("-", "")
+    encoded_data = request.GET.get('data')
+    if encoded_data:
+        decoded_data = base64.b64decode(encoded_data).decode('utf-8')
+        payment_data = json.loads(decoded_data)
+        
+        if payment_data['status'] == 'COMPLETE':
+            order = Order.objects.get(transaction_uuid=product_id)
+            order.is_paid = True
+            order.save()
 
-            if payment_data['status'] == 'COMPLETE':
-                order = Order.objects.get(transaction_uuid=payment_data['transaction_uuid'])
-                order.is_paid = True
-                order.save()
+            cart = Cart(request)
+            cart.clear()
 
-                cart = Cart(request)
-                cart.clear()
+            return redirect(f"/?payment_success=true")
+        else:
+            messages.error(request, 'Payment failed. Please try again.')
 
-                messages.success(request, 'Payment successful! Your order has been marked as paid.')
-            else:
-                messages.error(request, 'Payment failed. Please try again.')
-
-    return redirect('index')
+        return redirect('index')
 
 def search(request):
     query = request.GET.get('query', '')
