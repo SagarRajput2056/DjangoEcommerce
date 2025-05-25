@@ -28,6 +28,7 @@ class Product(models.Model):
     thumbnail = models.ImageField(upload_to='uploads/product_images/thumbnail/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    stock = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ('-created_at',)
@@ -58,6 +59,7 @@ class Product(models.Model):
         thumbnail = File(thumb_io, name=name)
 
         return thumbnail
+
 
 class Order(models.Model):
     METHOD = (

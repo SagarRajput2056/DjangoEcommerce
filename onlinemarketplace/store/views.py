@@ -12,7 +12,51 @@ from .forms import OrderForm
 # Create your views here.
 
 
+from django.db.models import Count
+
+def recommend_products(user, exclude_product_id=None, current_product=None, limit=5):
+    # If a current product is passed (e.g., on a product detail page)
+    if current_product:
+        category = current_product.category  # Get the category of the current product
+        
+        # Get IDs of previously purchased products within the same category (clothes, for example)
+        purchased_product_ids = OrderItem.objects.filter(order__created_by=user)\
+                                                 .filter(product__category=category)\
+                                                 .values_list('product_id', flat=True)
+
+        # Get recommended products in the same category, excluding the current product and previously bought items
+        recommended_products = Product.objects.filter(category=category)\
+                                               .exclude(id=exclude_product_id)\
+                                               .exclude(id__in=purchased_product_ids)\
+                                               .distinct()[:limit]
+    else:
+        # Default behavior for products from top categories the user has bought from
+        category_ids = OrderItem.objects.filter(order__created_by=user)\
+                                         .values('product__category')\
+                                         .annotate(total=Count('product__category'))\
+                                         .order_by('-total')\
+                                         .values_list('product__category', flat=True)[:3]
+
+        purchased_product_ids = OrderItem.objects.filter(order__created_by=user)\
+                                                 .values_list('product_id', flat=True)
+
+        recommended_products = Product.objects.filter(category_id__in=category_ids)\
+                                               .exclude(id__in=purchased_product_ids)\
+                                               .exclude(id=exclude_product_id)\
+                                               .distinct()[:limit]
+
+    return recommended_products
+
+
+from django.http import JsonResponse
+
 def add_to_cart(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+
+    # Check if stock is available
+    if product.stock <= 0:
+        return JsonResponse({'error': 'Out of stock'}, status=400)
+
     cart = Cart(request)
     cart.add(product_id)
 
@@ -61,6 +105,12 @@ def checkout(request):
             
             for item in cart:
                 total_price += item['product'].price * item['quantity']
+                product = item['product']
+                if product.stock < item['quantity']:  # If stock is less than cart quantity
+                    messages.error(request, f"Not enough stock for {product.title}.")
+                    return redirect('cart_view')  # Redirect to cart if stock is insufficient
+                product.stock -= item['quantity']  # Reduce stock
+                product.save()
             
             order = form.save(commit=False)
             order.created_by = request.user
@@ -131,6 +181,13 @@ def category_detail(request, slug):
 def product_detail(request, category_slug, slug):
     product = get_object_or_404(Product, slug=slug)
 
-    return render(request, 'store/product_detail.html',{
-        'product': product
+    # Ensure the recommendations consider the current product's category and exclude purchased items
+    recommendations = recommend_products(request.user, exclude_product_id=product.id, current_product=product) if request.user.is_authenticated else []
+
+    return render(request, 'store/product_detail.html', {
+        'product': product,
+        'recommendations': recommendations
     })
+
+
+

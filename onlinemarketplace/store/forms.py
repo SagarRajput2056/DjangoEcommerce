@@ -4,7 +4,7 @@ from .models import Product, Order
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['category', 'title', 'description', 'price', 'image',]
+        fields = ['category', 'title', 'description', 'price','stock', 'image',]
         widgets = {
             'category': forms.Select(attrs={
                 'class': 'w-full p-2 border border-black'
@@ -17,6 +17,9 @@ class ProductForm(forms.ModelForm):
             }),
             'price': forms.TextInput(attrs={
                 'class': 'w-full p-2 border border-black'
+            }),
+            'stock': forms.TextInput(attrs={
+                'class': 'w-full p-2 border border-black', 'min':0
             }),
             'image': forms.FileInput(attrs={
                 'class': 'w-full p-2 border border-black'

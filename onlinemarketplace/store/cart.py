@@ -1,5 +1,4 @@
 from django.conf import settings
-
 from .models import Product
 
 class Cart(object):
@@ -17,7 +16,7 @@ class Cart(object):
             self.cart[str(p)]['product'] = Product.objects.get(pk=p)
         
         for item in self.cart.values():
-            item['total_price'] = int(item['product'].price*item['quantity'])
+            item['total_price'] = int(item['product'].price * item['quantity'])
             
             yield item
     
@@ -30,24 +29,34 @@ class Cart(object):
 
     def add(self, product_id, quantity=1, update_quantity=False):
         product_id = str(product_id)
+        product = Product.objects.get(pk=product_id)
 
+        # Ensure that the quantity does not exceed the available stock
+        if quantity > product.stock:
+            quantity = product.stock  # Limit the quantity to the available stock
+        
         if product_id not in self.cart:
             self.cart[product_id] = {
                 'quantity': int(quantity),
                 'id': product_id
             }
-        if update_quantity:
-            self.cart[product_id]['quantity'] += int(quantity)
+        elif update_quantity:
+            new_quantity = self.cart[product_id]['quantity'] + int(quantity)
             
+            # Ensure that the updated quantity does not exceed the available stock
+            if new_quantity > product.stock:
+                new_quantity = product.stock  # Limit to available stock
+            
+            self.cart[product_id]['quantity'] = new_quantity
+
             if self.cart[product_id]['quantity'] <= 0:
                 self.remove(product_id)
-        
+
         self.save()
     
     def remove(self, product_id):
         if product_id in self.cart:
             del self.cart[product_id]
-
             self.save()
 
     def clear(self):
@@ -58,4 +67,4 @@ class Cart(object):
         for p in self.cart.keys():
             self.cart[str(p)]['product'] = Product.objects.get(pk=p)
 
-        return int(sum(item['product'].price*item['quantity'] for item in self.cart.values()))
+        return int(sum(item['product'].price * item['quantity'] for item in self.cart.values()))
